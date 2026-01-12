@@ -129,12 +129,21 @@ export default function PredictionsView({ prediction }: PredictionViewProps) {
                   <div className="space-y-2">
                     <p className="text-sm font-semibold text-foreground">Diagnostic Imaging with Risk Visualization</p>
                     <div className="bg-slate-100 rounded-lg overflow-hidden border border-border aspect-video flex items-center justify-center relative">
+                      {imageLoading && (
+                        <div className="absolute inset-0 flex items-center justify-center bg-slate-200/50 rounded-lg z-10">
+                          <p className="text-slate-700 font-medium">Loading X-ray image...</p>
+                        </div>
+                      )}
                       <img
                         src={prediction.scan_image_url || "/placeholder.svg"}
                         alt={`${prediction.predicted_disease} X-ray`}
                         className="max-w-full max-h-full object-contain"
                         onLoad={() => setImageLoading(false)}
-                        onError={() => setImageLoading(false)}
+                        onError={(e) => {
+                          setImageLoading(false)
+                          console.log("[v0] Failed to load image:", prediction.scan_image_url)
+                          e.currentTarget.src = "/medical-xray-scan.jpg"
+                        }}
                       />
                       <div
                         className="absolute inset-0 opacity-20 pointer-events-none rounded-lg"
@@ -142,11 +151,6 @@ export default function PredictionsView({ prediction }: PredictionViewProps) {
                           background: `radial-gradient(circle at center, ${generateGradCAMHeatmap(prediction.confidence_score)}, transparent)`,
                         }}
                       />
-                      {imageLoading && (
-                        <div className="absolute inset-0 flex items-center justify-center bg-slate-200/50 rounded-lg">
-                          <p className="text-slate-700 font-medium">Loading X-ray image...</p>
-                        </div>
-                      )}
                     </div>
                   </div>
 

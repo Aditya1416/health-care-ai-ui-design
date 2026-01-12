@@ -9,41 +9,41 @@
 
 ### 2. Setup Backend
 
-```bash
+\`\`\`bash
 cd backend
 python -m venv venv
 source venv/bin/activate  # On Windows: venv\Scripts\activate
 pip install -r requirements.txt
-```
+\`\`\`
 
 ### 3. Environment Configuration
 
 Create `.env` file in backend directory:
-```
+\`\`\`
 DATABASE_URL=postgresql://user:password@localhost/healthcare_ai
 SECRET_KEY=your-secure-secret-key
 DEBUG=False
 ENABLE_GPU=False
-```
+\`\`\`
 
 ### 4. Database Initialization
 
-```bash
+\`\`\`bash
 psql -U postgres -d healthcare_ai -f ../scripts/06-production-database.sql
 python scripts/generate_production_data.py
-```
+\`\`\`
 
 ### 5. Train ML Models
 
-```bash
+\`\`\`bash
 python backend/ml/training.py
-```
+\`\`\`
 
 ### 6. Run FastAPI Server
 
-```bash
+\`\`\`bash
 uvicorn main:app --reload --host 0.0.0.0 --port 8000
-```
+\`\`\`
 
 API Documentation available at: `http://localhost:8000/docs`
 

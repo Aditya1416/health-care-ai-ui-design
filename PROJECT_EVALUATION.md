@@ -216,42 +216,42 @@
 ## 📋 QUICK START TO MAKE IT WORK
 
 ### Step 1: Execute Database Migration (PRIORITY #1)
-```
+\`\`\`
 1. Click "Configure" button on the "Run Files" modal
 2. Select scripts/00-complete-setup.sql
 3. Click "Run" button
 4. Wait for completion (should see success message)
-```
+\`\`\`
 
 ### Step 2: Wire Up Form Submissions
-```
+\`\`\`
 Update auth pages to call Supabase auth functions
 Update dashboard forms to save to API routes
 Verify API routes return proper responses
-```
+\`\`\`
 
 ### Step 3: Implement Role-Based Access Control
-```
+\`\`\`
 Add middleware check for is_admin flag
 Protect /admin route
 Verify admin-only queries in API routes
-```
+\`\`\`
 
 ### Step 4: Add Data Fetching
-```
+\`\`\`
 Convert static dashboard pages to dynamic with data fetching
 Use SWR or fetch() to load from API routes
 Display real data in charts and tables
-```
+\`\`\`
 
 ### Step 5: Test End-to-End Flow
-```
+\`\`\`
 Signup with any email (e.g., test@example.com)
 Login with that account
 Try adding health metrics
 Check if data appears in dashboard
 Login as admin to verify admin features
-```
+\`\`\`
 
 ---
 

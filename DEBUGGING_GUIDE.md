@@ -11,24 +11,24 @@
 ### Steps to Debug
 
 #### 1. Verify Environment Variables
-```bash
+\`\`\`bash
 # In VS Code terminal, check if env vars are loaded
 echo $NEXT_PUBLIC_SUPABASE_URL
 
 # If empty, restart dev server after creating .env.local
 npm run dev
-```
+\`\`\`
 
 #### 2. Check Database Tables
 Visit your Supabase dashboard:
 1. Click "SQL Editor"
 2. Run this query:
-```sql
+\`\`\`sql
 SELECT COUNT(*) as count FROM predictions;
 SELECT COUNT(*) as count FROM patients;
 SELECT COUNT(*) as count FROM doctors;
 SELECT COUNT(*) as count FROM users;
-```
+\`\`\`
 
 If all show 0, run seed data:
 - Go to http://localhost:3000/api/admin/seed-data
@@ -41,7 +41,7 @@ Edit `app/api/admin/predictions/[id]/route.ts`:
 - Check VS Code terminal output
 
 #### 4. Test API Directly
-```bash
+\`\`\`bash
 # Seed test data first
 curl -X POST http://localhost:3000/api/admin/seed-data
 
@@ -50,7 +50,7 @@ curl http://localhost:3000/api/admin/predictions
 
 # Get specific prediction ID (replace with ID from list)
 curl http://localhost:3000/api/admin/predictions/{prediction_id}
-```
+\`\`\`
 
 #### 5. Browser Console Errors
 In your browser (F12 → Console):
@@ -85,7 +85,7 @@ In your browser (F12 → Console):
 
 In your VS Code terminal running `npm run dev`, you'll see:
 
-```
+\`\`\`
 [v0] Fetching prediction: {
   id: '93cb07ee-e54c...',
   disease: 'Asthma',
@@ -104,7 +104,7 @@ In your VS Code terminal running `npm run dev`, you'll see:
   disease: 'Asthma',
   images: [...]
 }
-```
+\`\`\`
 
 If you don't see these logs:
 1. Check if you're looking at the right terminal

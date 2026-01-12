@@ -36,7 +36,7 @@ All required Supabase environment variables are set:
 3. **Access protected pages** - Navigate to `/protected` after logging in
 
 ## File Structure
-```
+\`\`\`
 lib/supabase/
   ├── client.ts        # Browser client
   ├── server.ts        # Server client
@@ -49,7 +49,7 @@ app/auth/
   └── callback/        # Auth callback (if needed)
 
 app/protected/         # Protected route example
-```
+\`\`\`
 
 ## Database Schema Details
 
