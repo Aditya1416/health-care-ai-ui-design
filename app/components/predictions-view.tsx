@@ -38,6 +38,7 @@ interface PredictionViewProps {
 
 export default function PredictionsView({ prediction }: PredictionViewProps) {
   const [imageLoading, setImageLoading] = useState(true)
+  const [imageError, setImageError] = useState(false)
   const hasXray = !!prediction.scan_image_url && prediction.scan_image_url.trim().length > 0
   const confidencePercent = Math.round((prediction.confidence_score || 0) * 100)
   const diseaseInfo = getDiseaseInfo(prediction.predicted_disease)
@@ -52,6 +53,18 @@ export default function PredictionsView({ prediction }: PredictionViewProps) {
   const generateGradCAMHeatmap = (confidence: number): string => {
     const hueRotation = (1 - confidence) * 240
     return `hsl(${hueRotation}, 70%, 50%)`
+  }
+
+  const getOptimizedImageUrl = (url: string | undefined): string => {
+    if (!url) return "/placeholder.svg"
+
+    // If it's already a full URL, use it directly
+    if (url.startsWith("http")) {
+      return url
+    }
+
+    // Fallback to placeholder
+    return `/placeholder.svg?height=600&width=800&query=medical+xray+scan`
   }
 
   const currentSeverity = prediction.severity_level || 1
@@ -128,29 +141,46 @@ export default function PredictionsView({ prediction }: PredictionViewProps) {
                   {/* X-Ray Image with GradCAM Overlay */}
                   <div className="space-y-2">
                     <p className="text-sm font-semibold text-foreground">Diagnostic Imaging with Risk Visualization</p>
-                    <div className="bg-slate-100 rounded-lg overflow-hidden border border-border aspect-video flex items-center justify-center relative">
-                      {imageLoading && (
+                    <div className="bg-slate-100 rounded-lg overflow-hidden border border-border aspect-video flex items-center justify-center relative group">
+                      {imageLoading && !imageError && (
                         <div className="absolute inset-0 flex items-center justify-center bg-slate-200/50 rounded-lg z-10">
                           <p className="text-slate-700 font-medium">Loading X-ray image...</p>
                         </div>
                       )}
+                      {imageError && (
+                        <div className="absolute inset-0 flex flex-col items-center justify-center bg-slate-100 rounded-lg z-10">
+                          <Scan className="h-12 w-12 text-slate-400 mb-2" />
+                          <p className="text-slate-700 font-medium">Image unavailable</p>
+                          <p className="text-xs text-slate-500">Using placeholder medical imaging</p>
+                        </div>
+                      )}
                       <img
-                        src={prediction.scan_image_url || "/placeholder.svg"}
+                        src={getOptimizedImageUrl(prediction.scan_image_url) || "/placeholder.svg"}
                         alt={`${prediction.predicted_disease} X-ray`}
                         className="max-w-full max-h-full object-contain"
-                        onLoad={() => setImageLoading(false)}
+                        crossOrigin="anonymous"
+                        onLoad={() => {
+                          setImageLoading(false)
+                          setImageError(false)
+                          console.log("[v0] Image loaded successfully")
+                        }}
                         onError={(e) => {
                           setImageLoading(false)
-                          console.log("[v0] Failed to load image:", prediction.scan_image_url)
-                          e.currentTarget.src = "/medical-xray-scan.jpg"
+                          setImageError(true)
+                          console.log("[v0] Failed to load image from URL:", prediction.scan_image_url)
                         }}
                       />
                       <div
-                        className="absolute inset-0 opacity-20 pointer-events-none rounded-lg"
+                        className="absolute inset-0 pointer-events-none rounded-lg transition-opacity duration-300"
                         style={{
-                          background: `radial-gradient(circle at center, ${generateGradCAMHeatmap(prediction.confidence_score)}, transparent)`,
+                          background: `radial-gradient(circle at 40% 40%, ${generateGradCAMHeatmap(prediction.confidence_score)}, transparent 70%)`,
+                          opacity: Math.min(0.4 + (prediction.confidence_score || 0) * 0.2, 0.6),
+                          mixBlendMode: "multiply",
                         }}
                       />
+                      <div className="absolute top-2 right-2 bg-black/40 text-white px-2 py-1 rounded text-xs font-medium z-5">
+                        GradCAM: {confidencePercent}%
+                      </div>
                     </div>
                   </div>
 
@@ -165,7 +195,7 @@ export default function PredictionsView({ prediction }: PredictionViewProps) {
                     <p className="text-xs text-muted-foreground italic">
                       The overlay shows model attention: red regions indicate areas of highest diagnostic concern,
                       yellow indicates moderate findings, and blue indicates lower risk areas. Model confidence:{" "}
-                      {confidencePercent}%
+                      {confidencePercent}%. Overlay opacity increases with confidence score.
                     </p>
                   </div>
 
