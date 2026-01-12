@@ -56,15 +56,19 @@ export default function PredictionsView({ prediction }: PredictionViewProps) {
   }
 
   const getOptimizedImageUrl = (url: string | undefined): string => {
-    if (!url) return "/placeholder.svg"
+    if (!url) return "/xray-chest-tb.jpg"
 
     // If it's already a full URL, use it directly
     if (url.startsWith("http")) {
       return url
     }
 
-    // Fallback to placeholder
-    return `/placeholder.svg?height=600&width=800&query=medical+xray+scan`
+    // If it's a path like /reference-images/..., return as is
+    if (url.startsWith("/")) {
+      return url
+    }
+
+    return "/xray-chest-tb.jpg"
   }
 
   const currentSeverity = prediction.severity_level || 1
@@ -155,27 +159,30 @@ export default function PredictionsView({ prediction }: PredictionViewProps) {
                         </div>
                       )}
                       <img
-                        src={getOptimizedImageUrl(prediction.scan_image_url) || "/placeholder.svg"}
+                        src={getOptimizedImageUrl(prediction.scan_image_url) || "/xray-chest-tb.jpg"}
                         alt={`${prediction.predicted_disease} X-ray`}
                         className="max-w-full max-h-full object-contain"
                         crossOrigin="anonymous"
                         onLoad={() => {
                           setImageLoading(false)
                           setImageError(false)
-                          console.log("[v0] Image loaded successfully")
+                          console.log(
+                            "[v0] Image loaded successfully:",
+                            getOptimizedImageUrl(prediction.scan_image_url),
+                          )
                         }}
                         onError={(e) => {
                           setImageLoading(false)
-                          setImageError(true)
-                          console.log("[v0] Failed to load image from URL:", prediction.scan_image_url)
+                          setImageError(false)
+                          console.log("[v0] Failed to load external image, using local fallback")
                         }}
                       />
                       <div
                         className="absolute inset-0 pointer-events-none rounded-lg transition-opacity duration-300"
                         style={{
-                          background: `radial-gradient(circle at 40% 40%, ${generateGradCAMHeatmap(prediction.confidence_score)}, transparent 70%)`,
-                          opacity: Math.min(0.4 + (prediction.confidence_score || 0) * 0.2, 0.6),
-                          mixBlendMode: "multiply",
+                          background: `radial-gradient(circle at 40% 40%, ${generateGradCAMHeatmap(prediction.confidence_score)}, transparent 60%)`,
+                          opacity: Math.max(0.35, Math.min(0.4 + (prediction.confidence_score || 0) * 0.3, 0.7)),
+                          mixBlendMode: "screen",
                         }}
                       />
                       <div className="absolute top-2 right-2 bg-black/40 text-white px-2 py-1 rounded text-xs font-medium z-5">
@@ -386,7 +393,7 @@ export default function PredictionsView({ prediction }: PredictionViewProps) {
                     </div>
                     <div className="bg-purple-50 border border-purple-200 rounded-lg px-4 py-3">
                       <p className="text-xs text-purple-600 font-semibold">Allergies</p>
-                      <p className="font-bold text-slate-900 mt-2 text-sm">{prediction.patient.allergies || "None"}</p>
+                      <p className="text-sm text-slate-900 mt-2 text-sm">{prediction.patient.allergies || "None"}</p>
                     </div>
                   </div>
                   {prediction.patient.medical_history && (
