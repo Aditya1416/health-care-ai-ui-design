@@ -4,8 +4,9 @@ import { useState } from "react"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Badge } from "@/components/ui/badge"
-import { AlertCircle, Scan, Activity, TrendingUp } from "lucide-react"
+import { AlertCircle, Scan, Activity, TrendingUp, Brain } from "lucide-react"
 import { getDiseaseInfo } from "@/lib/disease-info"
+import { ChestXRayAnalysisPanel } from "@/components/medical/chest-xray-analysis-panel"
 
 interface EnvironmentalFactors {
   aqi_index?: number
@@ -116,8 +117,16 @@ export default function PredictionsView({ prediction }: PredictionViewProps) {
       </Card>
 
       {/* Tabs */}
-      <Tabs defaultValue={hasXray ? "imaging" : "clinical"} className="w-full">
-        <TabsList className="grid w-full grid-cols-2">
+      <Tabs defaultValue={hasXray ? "densenet" : "clinical"} className="w-full">
+        <TabsList className="grid w-full grid-cols-3">
+          <TabsTrigger
+            value="densenet"
+            disabled={!hasXray}
+            className={`flex items-center gap-2 ${!hasXray ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}`}
+          >
+            <Brain className="h-4 w-4" />
+            DenseNet-121 AI
+          </TabsTrigger>
           <TabsTrigger
             value="imaging"
             disabled={!hasXray}
@@ -131,6 +140,31 @@ export default function PredictionsView({ prediction }: PredictionViewProps) {
             Clinical Assessment
           </TabsTrigger>
         </TabsList>
+
+        {/* DenseNet-121 Analysis Tab */}
+        <TabsContent value="densenet" className="space-y-4">
+          {hasXray ? (
+            <ChestXRayAnalysisPanel
+              imageUrl={getOptimizedImageUrl(prediction.scan_image_url)}
+              patientAge={undefined}
+              patientGender={prediction.patient?.gender}
+              clinicalHistory={prediction.patient?.medical_history ? [prediction.patient.medical_history] : undefined}
+              onAnalysisComplete={(result) => {
+                console.log("[v0] DenseNet-121 analysis complete:", result.primary_diagnosis?.pathology_name)
+              }}
+            />
+          ) : (
+            <Card>
+              <CardContent className="flex flex-col items-center justify-center py-12">
+                <Brain className="h-12 w-12 text-muted-foreground mb-4" />
+                <p className="text-lg font-medium text-foreground">No X-Ray Image Available</p>
+                <p className="text-sm text-muted-foreground mt-2">
+                  Upload a chest X-ray to use the DenseNet-121 AI analysis with 14 pathology detection
+                </p>
+              </CardContent>
+            </Card>
+          )}
+        </TabsContent>
 
         {/* X-Ray Tab */}
         <TabsContent value="imaging" className="space-y-4">
