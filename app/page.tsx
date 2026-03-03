@@ -1,31 +1,7 @@
-import { redirect } from "next/navigation"
-import { createServerClient } from "@/lib/supabase/server"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
 
-export default async function Home() {
-  let user = null
-
-  try {
-    // Check if environment variables are set before attempting to create client
-    if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
-      console.warn("[v0] Missing Supabase environment variables")
-    } else {
-      const supabase = await createServerClient()
-      const {
-        data: { user: authUser },
-      } = await supabase.auth.getUser()
-      user = authUser
-    }
-  } catch (error) {
-    console.warn("[v0] Could not fetch user:", error)
-    // Continue to render the page even if auth check fails
-  }
-
-  if (user) {
-    redirect("/dashboard")
-  }
-
+export default function Home() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5">
       {/* Navigation */}
