@@ -1,6 +1,7 @@
 // Backend API client for Next.js frontend
+// Configure your Colab ngrok URL in environment variables or use the default
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api/v1"
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "https://gilda-bodger-rex.ngrok-free.dev"
 
 interface PredictionRequest {
   age: number
@@ -31,6 +32,7 @@ export async function fetchBackendData(userId: string) {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
+        "ngrok-skip-browser-warning": "true",
         Authorization: `Bearer ${localStorage.getItem("access_token")}`,
       },
     })
@@ -53,6 +55,7 @@ export async function getPrediction(
       method: "POST",
       headers: {
         "Content-Type": "application/json",
+        "ngrok-skip-browser-warning": "true",
         Authorization: `Bearer ${accessToken}`,
       },
       body: JSON.stringify(request),
@@ -73,6 +76,7 @@ export async function generateReport(patientId: string, accessToken: string) {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
+        "ngrok-skip-browser-warning": "true",
         Authorization: `Bearer ${accessToken}`,
       },
       body: JSON.stringify({
@@ -95,6 +99,7 @@ export async function getAdminStatistics(accessToken: string) {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
+        "ngrok-skip-browser-warning": "true",
         Authorization: `Bearer ${accessToken}`,
       },
     })
@@ -114,6 +119,7 @@ export async function getModelPerformance(accessToken: string) {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
+        "ngrok-skip-browser-warning": "true",
         Authorization: `Bearer ${accessToken}`,
       },
     })
@@ -137,6 +143,7 @@ export async function uploadMedicalImage(file: File, patientId: string, accessTo
       method: "POST",
       headers: {
         Authorization: `Bearer ${accessToken}`,
+        "ngrok-skip-browser-warning": "true",
       },
       body: formData,
     })
@@ -148,3 +155,79 @@ export async function uploadMedicalImage(file: File, patientId: string, accessTo
     return null
   }
 }
+
+// ============ Colab Backend API Functions ============
+
+/**
+ * Get patient predictions from Colab FastAPI backend
+ * Matches endpoint: GET /patients/{patient_id}/predictions
+ */
+export async function getPatientPredictions(patientId: string, accessToken?: string) {
+  try {
+    const headers: HeadersInit = {
+      "Content-Type": "application/json",
+      "ngrok-skip-browser-warning": "true",
+    }
+    if (accessToken) {
+      headers.Authorization = `Bearer ${accessToken}`
+    }
+
+    const response = await fetch(`${API_BASE_URL}/patients/${patientId}/predictions`, {
+      method: "GET",
+      headers,
+    })
+
+    if (!response.ok) throw new Error("Failed to fetch patient predictions")
+    return await response.json()
+  } catch (error) {
+    console.error("Patient predictions API error:", error)
+    return null
+  }
+}
+
+/**
+ * Generic fetch wrapper for Colab backend with ngrok header
+ */
+export async function fetchFromColab<T>(
+  endpoint: string,
+  options: RequestInit = {}
+): Promise<T | null> {
+  try {
+    const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+      ...options,
+      headers: {
+        "Content-Type": "application/json",
+        "ngrok-skip-browser-warning": "true",
+        ...options.headers,
+      },
+    })
+
+    if (!response.ok) {
+      throw new Error(`API error: ${response.status} ${response.statusText}`)
+    }
+
+    return await response.json()
+  } catch (error) {
+    console.error(`Colab API error for ${endpoint}:`, error)
+    return null
+  }
+}
+
+/**
+ * Health check for Colab backend
+ */
+export async function checkColabHealth() {
+  try {
+    const response = await fetch(`${API_BASE_URL}/`, {
+      method: "GET",
+      headers: {
+        "ngrok-skip-browser-warning": "true",
+      },
+    })
+    return response.ok
+  } catch {
+    return false
+  }
+}
+
+export { API_BASE_URL }
