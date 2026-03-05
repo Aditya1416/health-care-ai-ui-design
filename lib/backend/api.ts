@@ -230,4 +230,51 @@ export async function checkColabHealth() {
   }
 }
 
+/**
+ * Get all patients from Colab backend
+ */
+export async function getPatients() {
+  return fetchFromColab<any[]>("/patients")
+}
+
+/**
+ * Get single patient details
+ */
+export async function getPatient(patientId: string) {
+  return fetchFromColab<any>(`/patients/${patientId}`)
+}
+
+/**
+ * Get patient's medical scans/images
+ */
+export async function getPatientScans(patientId: string) {
+  return fetchFromColab<any[]>(`/patients/${patientId}/scans`)
+}
+
+/**
+ * Get patient's heatmap analysis
+ */
+export async function getPatientHeatmap(patientId: string, predictionId?: string) {
+  const endpoint = predictionId 
+    ? `/patients/${patientId}/heatmap?prediction_id=${predictionId}`
+    : `/patients/${patientId}/heatmap`
+  return fetchFromColab<any>(endpoint)
+}
+
+/**
+ * Run prediction analysis for a patient
+ */
+export async function runPatientAnalysis(patientId: string) {
+  return fetchFromColab<any>(`/patients/${patientId}/analyze`, {
+    method: "POST",
+  })
+}
+
+/**
+ * Get all available API endpoints (for debugging)
+ */
+export async function getAPIEndpoints() {
+  return fetchFromColab<any>("/openapi.json")
+}
+
 export { API_BASE_URL }

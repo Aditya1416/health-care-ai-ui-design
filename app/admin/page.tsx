@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import Link from "next/link"
-import { BarChart3, Stethoscope, Users, Database, AlertCircle } from "lucide-react"
+import { BarChart3, Stethoscope, Users, Database, AlertCircle, Brain } from "lucide-react"
 
 interface Doctor {
   id: string
@@ -268,6 +268,27 @@ export default function AdminDashboard() {
                 Creates 25 unique doctors, 200 unique patients across Tamil Nadu districts, and 200 AI predictions with
                 real medical images from Supabase storage.
               </p>
+            </CardContent>
+          </Card>
+
+          {/* Patient Analysis - Primary Action */}
+          <Card className="border-primary bg-primary/5">
+            <CardHeader>
+              <CardTitle className="text-lg flex items-center gap-2">
+                <Brain className="h-5 w-5 text-primary" />
+                Patient Analysis (Colab Backend)
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <p className="text-sm text-muted-foreground">
+                Select a patient from the Colab backend, view predictions, medical scans, heatmaps, and run AI analysis.
+              </p>
+              <Link href="/admin/patient-analysis">
+                <Button className="w-full gap-2">
+                  <Brain className="h-4 w-4" />
+                  Open Patient Analysis
+                </Button>
+              </Link>
             </CardContent>
           </Card>
 
