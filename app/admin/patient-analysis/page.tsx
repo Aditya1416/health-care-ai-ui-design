@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { AlertCircle, Loader2 } from 'lucide-react'
+import { AlertCircle, Loader2, Send } from 'lucide-react'
 
 interface Prediction {
   id: string
@@ -35,6 +35,9 @@ export default function PatientAnalysisPage() {
   const [referenceImageUrl, setReferenceImageUrl] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [chatMessages, setChatMessages] = useState<Array<{ role: string; content: string }>>([])
+  const [chatInput, setChatInput] = useState('')
+  const [chatLoading, setChatLoading] = useState(false)
 
   const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL || '',
@@ -71,6 +74,7 @@ export default function PatientAnalysisPage() {
     setXrayUrl(null)
     setGradcamUrl(null)
     setReferenceImageUrl(null)
+    setChatMessages([]) // Reset chat when selecting new prediction
     setLoading(true)
     setError(null)
 
@@ -150,6 +154,42 @@ export default function PatientAnalysisPage() {
     return 'bg-green-100 text-green-800'
   }
 
+  const handleSendMessage = async () => {
+    if (!chatInput.trim() || !selectedPrediction) return
+
+    const userMessage = chatInput
+    setChatInput('')
+    setChatMessages((prev) => [...prev, { role: 'user', content: userMessage }])
+    setChatLoading(true)
+
+    try {
+      const response = await fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          patientId: selectedPrediction.patient_id,
+          predictionId: selectedPrediction.id,
+          disease: selectedPrediction.predicted_disease,
+          question: userMessage,
+          patientInfo: patientInfo,
+          confidence: selectedPrediction.confidence_score,
+        }),
+      })
+
+      if (!response.ok) throw new Error('Failed to get response')
+      const data = await response.json()
+      setChatMessages((prev) => [...prev, { role: 'assistant', content: data.response }])
+    } catch (err) {
+      console.error('Chat error:', err)
+      setChatMessages((prev) => [
+        ...prev,
+        { role: 'assistant', content: 'Sorry, I encountered an error. Please try again.' },
+      ])
+    } finally {
+      setChatLoading(false)
+    }
+  }
+
   return (
     <div className="min-h-screen bg-background p-4 md:p-8">
       <div className="max-w-7xl mx-auto">
@@ -210,9 +250,10 @@ export default function PatientAnalysisPage() {
           <div className="lg:col-span-3">
             {selectedPrediction && patientInfo ? (
               <Tabs defaultValue="analysis" className="space-y-6">
-                <TabsList className="grid w-full grid-cols-2">
+                <TabsList className="grid w-full grid-cols-3">
                   <TabsTrigger value="analysis">AI Analysis</TabsTrigger>
                   <TabsTrigger value="xray">X-ray Comparison</TabsTrigger>
+                  <TabsTrigger value="chat">Clinical Chat</TabsTrigger>
                 </TabsList>
 
                 {/* AI Analysis Tab */}
@@ -382,7 +423,88 @@ export default function PatientAnalysisPage() {
                     </Card>
                   )}
                 </TabsContent>
-              </Tabs>
+
+                {/* Clinical Chat Tab */}
+                <TabsContent value="chat" className="space-y-6">
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Clinical Chat Assistant</CardTitle>
+                      <CardDescription>Ask questions about this patient's diagnosis and medical data</CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      {/* Chat Messages */}
+                      <div className="bg-muted/30 rounded-lg p-4 h-96 overflow-y-auto space-y-3 border">
+                        {chatMessages.length === 0 ? (
+                          <div className="flex items-center justify-center h-full text-muted-foreground">
+                            <p className="text-center">
+                              Ask me about this patient's diagnosis, test results, risk factors, or treatment recommendations.
+                            </p>
+                          </div>
+                        ) : (
+                          chatMessages.map((msg, idx) => (
+                            <div
+                              key={idx}
+                              className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
+                            >
+                              <div
+                                className={`max-w-xs px-4 py-2 rounded-lg ${
+                                  msg.role === 'user'
+                                    ? 'bg-primary text-primary-foreground'
+                                    : 'bg-muted text-muted-foreground border border-border'
+                                }`}
+                              >
+                                <p className="text-sm">{msg.content}</p>
+                              </div>
+                            </div>
+                          ))
+                        )}
+                        {chatLoading && (
+                          <div className="flex justify-start">
+                            <div className="bg-muted px-4 py-2 rounded-lg">
+                              <Loader2 className="h-4 w-4 animate-spin" />
+                            </div>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Chat Input */}
+                      <div className="flex gap-2">
+                        <input
+                          type="text"
+                          placeholder="Ask a clinical question..."
+                          value={chatInput}
+                          onChange={(e) => setChatInput(e.target.value)}
+                          onKeyPress={(e) => {
+                            if (e.key === 'Enter' && !chatLoading) {
+                              handleSendMessage()
+                            }
+                          }}
+                          disabled={chatLoading}
+                          className="flex-1 px-4 py-2 rounded-lg border border-input bg-background text-sm disabled:opacity-50"
+                        />
+                        <Button
+                          onClick={handleSendMessage}
+                          disabled={chatLoading || !chatInput.trim()}
+                          className="gap-2"
+                        >
+                          <Send className="h-4 w-4" />
+                          Send
+                        </Button>
+                      </div>
+
+                      {/* Example Questions */}
+                      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 text-sm">
+                        <p className="font-semibold text-blue-900 mb-2">Example questions:</p>
+                        <ul className="text-blue-800 space-y-1 text-xs">
+                          <li>• What are the risk factors for this patient?</li>
+                          <li>• What does the GradCAM heatmap indicate?</li>
+                          <li>• What's the next step in clinical management?</li>
+                          <li>• How confident is the AI in this diagnosis?</li>
+                        </ul>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </TabsContent>
             ) : (
               <Card>
                 <CardContent className="pt-12 pb-12 text-center">

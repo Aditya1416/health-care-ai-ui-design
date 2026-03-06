@@ -275,4 +275,33 @@ export async function askChatbot(patientId: string, question: string) {
   })
 }
 
+/**
+ * Send X-ray image to FastAPI backend for prediction
+ * Returns: predicted disease, confidence, GradCAM heatmap URL
+ */
+export async function predictFromXray(file: File, patientId: string) {
+  try {
+    const formData = new FormData()
+    formData.append("file", file)
+    formData.append("patient_id", patientId)
+
+    const response = await fetch(`${API_BASE_URL}/predict`, {
+      method: "POST",
+      headers: {
+        "ngrok-skip-browser-warning": "true",
+      },
+      body: formData,
+    })
+
+    if (!response.ok) {
+      throw new Error(`Prediction failed: ${response.statusText}`)
+    }
+
+    return await response.json()
+  } catch (error) {
+    console.error("Prediction API error:", error)
+    return null
+  }
+}
+
 export { API_BASE_URL }
