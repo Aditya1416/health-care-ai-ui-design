@@ -1,7 +1,4 @@
 @import "tailwindcss";
-/* removed the non-existent "tw-animate-css" import that was breaking Tailwind */
-
-@custom-variant dark (&:is(.dark *));
 
 :root {
   --background: oklch(0.08 0 0);
