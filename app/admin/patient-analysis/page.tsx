@@ -505,6 +505,7 @@ export default function PatientAnalysisPage() {
                     </CardContent>
                   </Card>
                 </TabsContent>
+              </Tabs>
             ) : (
               <Card>
                 <CardContent className="pt-12 pb-12 text-center">
