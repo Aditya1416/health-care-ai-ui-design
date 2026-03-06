@@ -1,7 +1,8 @@
 // Backend API client for Next.js frontend
-// Configure your Colab ngrok URL in environment variables or use the default
+// Supports both local (VS Code) and cloud backends
+// Set NEXT_PUBLIC_BACKEND_URL in .env.local for local development
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "https://gilda-bodger-rex.ngrok-free.dev"
+const API_BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:8000"
 
 interface PredictionRequest {
   age: number

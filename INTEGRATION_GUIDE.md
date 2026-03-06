@@ -13,19 +13,19 @@ yarn install
 ```
 
 ### 2. Environment Setup
-Create a `.env.local` file:
+Create a `.env.local` file in the frontend root directory:
 
 ```env
-# Frontend Base URL (for API routes)
+# Frontend Base URL (local development)
 NEXT_PUBLIC_API_URL=http://localhost:3000
 
-# Supabase Configuration (if using Supabase for patient data)
+# Local Backend (VS Code FastAPI)
+NEXT_PUBLIC_BACKEND_URL=http://localhost:8000
+
+# Supabase Configuration
 NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
 SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
-
-# Colab Backend (ngrok URL for ML inference)
-NEXT_PUBLIC_COLAB_API_URL=https://your-ngrok-url.ngrok-free.app
 ```
 
 ### 3. Run Development Server
@@ -208,7 +208,110 @@ CREATE TABLE reference_images (
 
 ---
 
-## Backend Integration Checklist
+## Local Development with VS Code Backend
+
+### Backend Setup (VS Code)
+
+#### 1. Start Your FastAPI Backend
+In VS Code terminal:
+```bash
+# Navigate to backend directory
+cd backend
+
+# Install dependencies
+pip install -r requirements.txt
+
+# Run FastAPI server
+uvicorn main:app --reload --host 0.0.0.0 --port 8000
+```
+
+Backend should be running at: `http://localhost:8000`
+
+#### 2. Enable CORS for Local Development
+In your FastAPI `main.py`:
+```python
+from fastapi.middleware.cors import CORSMiddleware
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:3000", "http://localhost:3001"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+```
+
+#### 3. Check FastAPI Docs
+Visit: `http://localhost:8000/docs` to see all endpoints
+
+### Frontend Setup (VS Code)
+
+#### 1. Open Frontend in VS Code
+```bash
+# In another terminal window
+cd frontend  # or path to downloaded frontend
+
+# Install dependencies
+npm install
+
+# Update .env.local with local backend URL
+NEXT_PUBLIC_BACKEND_URL=http://localhost:8000
+```
+
+#### 2. Start Development Server
+```bash
+npm run dev
+# Frontend runs at: http://localhost:3000
+```
+
+#### 3. Test Integration
+- Go to `http://localhost:3000/admin/patient-analysis`
+- Check browser console for API calls
+- Backend should respond with patient data
+
+### Backend Expected Endpoints (Update as Needed)
+
+Make sure your VS Code FastAPI backend has these endpoints:
+
+```python
+# endpoints.py
+
+@app.get("/patients")
+def get_patients():
+    """Fetch all patients"""
+    return [...]
+
+@app.get("/patient/{patient_id}")
+def get_patient(patient_id: str):
+    """Get single patient details"""
+    return {...}
+
+@app.get("/patient/{patient_id}/predictions")
+def get_predictions(patient_id: str):
+    """Get patient predictions"""
+    return [...]
+
+@app.get("/patient/{patient_id}/images")
+def get_patient_images(patient_id: str):
+    """Get X-rays, heatmaps, reference images"""
+    return {
+        "patient_xray": "url_to_patient_xray.jpg",
+        "predictions": [
+            {
+                "disease": "Tuberculosis",
+                "probability": 0.85,
+                "gradcam_heatmap": "url_to_heatmap.jpg",
+                "reference_image": "url_to_reference.jpg",
+                "similarity_score": 0.88
+            }
+        ]
+    }
+
+@app.post("/chat")
+def chat(patient_id: str, question: str):
+    """Clinical chat endpoint"""
+    return {"response": "AI-generated response..."}
+```
 
 ### Database Setup (Supabase)
 - [ ] Create `predictions` table with columns:
