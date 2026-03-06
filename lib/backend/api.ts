@@ -231,50 +231,48 @@ export async function checkColabHealth() {
 }
 
 /**
- * Get all patients from Colab backend
+ * Get all patients from backend
  */
 export async function getPatients() {
   return fetchFromColab<any[]>("/patients")
 }
 
 /**
- * Get single patient details
+ * Get single patient details (info + predictions)
  */
-export async function getPatient(patientId: string) {
-  return fetchFromColab<any>(`/patients/${patientId}`)
+export async function getPatientDetails(patientId: string) {
+  return fetchFromColab<any>(`/patient/${patientId}`)
 }
 
 /**
- * Get patient's medical scans/images
+ * Get patient X-ray images with GradCAM heatmaps and reference images
+ * Returns: original X-ray, heatmaps for each disease, reference disease images
  */
-export async function getPatientScans(patientId: string) {
-  return fetchFromColab<any[]>(`/patients/${patientId}/scans`)
+export async function getPatientImages(patientId: string) {
+  return fetchFromColab<{
+    patient_xray: string
+    predictions: Array<{
+      disease: string
+      probability: number
+      gradcam_heatmap: string
+      reference_image: string
+      similarity_score?: number
+      affected_areas?: string[]
+    }>
+  }>(`/patient/${patientId}/images`)
 }
 
 /**
- * Get patient's heatmap analysis
+ * Send question to chatbot about patient
  */
-export async function getPatientHeatmap(patientId: string, predictionId?: string) {
-  const endpoint = predictionId 
-    ? `/patients/${patientId}/heatmap?prediction_id=${predictionId}`
-    : `/patients/${patientId}/heatmap`
-  return fetchFromColab<any>(endpoint)
-}
-
-/**
- * Run prediction analysis for a patient
- */
-export async function runPatientAnalysis(patientId: string) {
-  return fetchFromColab<any>(`/patients/${patientId}/analyze`, {
+export async function askChatbot(patientId: string, question: string) {
+  return fetchFromColab<{ response: string }>("/chat", {
     method: "POST",
+    body: JSON.stringify({
+      patient_id: patientId,
+      question: question,
+    }),
   })
-}
-
-/**
- * Get all available API endpoints (for debugging)
- */
-export async function getAPIEndpoints() {
-  return fetchFromColab<any>("/openapi.json")
 }
 
 export { API_BASE_URL }
